@@ -22,6 +22,7 @@ async function getUser(id) {
  * @param {string} name - Name
  * @param {string} email - Email
  * @param {string} password - Hashed password
+ * @param {string} confirm_password - Confirm password
  * @returns {Promise}
  */
 async function createUser(name, email, password) {
@@ -30,6 +31,36 @@ async function createUser(name, email, password) {
     email,
     password,
   });
+}
+
+/**
+ * Check if new password matches the stored password hash.
+ * @param {string} new_password - The password to check.
+ * @param {string} hashedPassword - The hashed password stored in the database.
+ * @returns {boolean}
+ */
+async function passwordMatched(password, hashedPassword) {
+  const bcrypt = require('bcrypt');
+  return await bcrypt.compare(password, hashedPassword);
+}
+
+/** Change password
+ * @param {string} id - ID
+ * @param {string} new_password - New password
+ * @return {Promise}
+ */
+async function changePassword(id, new_password) {
+  try {
+    const user = await User.findByIdAndUpdate(id, { password: new_password });
+
+    if (user) {
+      return true;
+    } else {
+      return false;
+    }
+  } catch (error) {
+    throw error;
+  }
 }
 
 /**
@@ -62,10 +93,23 @@ async function deleteUser(id) {
   return User.deleteOne({ _id: id });
 }
 
+/**
+ * Check if email is already existed
+ * @param {string} email - Email
+ * @returns {Promise}
+ */
+async function isEmailExist(email) {
+  const user = await User.findOne({ email });
+  return !!user;
+}
+
 module.exports = {
   getUsers,
   getUser,
   createUser,
+  passwordMatched,
+  changePassword,
   updateUser,
   deleteUser,
+  isEmailExist,
 };
